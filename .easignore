@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+android/build/
+android/app/build/
+android/.gradle/
+
+# Backend
+backend/
+
+# Logs
+*.log
+logs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+
+# Use Prebuild/CNG - exclude android folder from EAS Build
+/android
