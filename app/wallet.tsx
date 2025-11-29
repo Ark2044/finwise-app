@@ -256,7 +256,7 @@ export default function WalletScreen() {
               ]
             );
           } else {
-            Alert.alert('Error', response.error || 'Payment verification failed');
+            Alert.alert('Error', response.message || 'Payment verification failed');
           }
         } catch (verifyError: any) {
           console.error('Verification error:', verifyError);

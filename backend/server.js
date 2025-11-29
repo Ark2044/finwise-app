@@ -30,6 +30,7 @@ const walletRoutes = require('./routes/wallet');
 const paymentRoutes = require('./routes/payments');
 const webhookRoutes = require('./routes/webhooks');
 const createAnalyticsRoutes = require('./routes/analytics');
+const cryptoRoutes = require('./routes/crypto');
 
 // Import DB config (initializes connection)
 const pool = require('./config/db');
@@ -123,6 +124,7 @@ app.use('/', walletRoutes); // Mounted at root because paths are fully qualified
 app.use('/', paymentRoutes); // Mounted at root because paths are fully qualified in payments.js
 app.use('/', webhookRoutes); // Webhook routes for Razorpay
 app.use('/analytics', createAnalyticsRoutes(pool));
+app.use('/crypto', cryptoRoutes);
 
 // ==================== ERROR HANDLING ====================
 

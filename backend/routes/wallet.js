@@ -7,6 +7,7 @@ const { authenticateToken } = require('../middleware/auth');
 const { generalLimiter, paymentLimiter } = require('../middleware/rateLimiter');
 const { logTransaction, logError, logSecurity } = require('../middleware/auditLogger');
 const { setUserContext, resetUserContext } = require('../utils/helpers');
+const openservAgent = require('../services/openservAgent');
 
 // Initialize Razorpay with proper error handling
 let razorpay;
@@ -422,6 +423,13 @@ router.post('/wallet/transfer-to-upi-lite', paymentLimiter, async (req, res) => 
       return res.status(400).json({ error: 'Insufficient bank balance' });
     }
 
+    // Get previous UPI Lite balance for the hook
+    const prevBalanceResult = await client.query(
+      'SELECT upi_lite_balance FROM users WHERE id = $1',
+      [req.user.userId]
+    );
+    const previousUpiLiteBalance = parseFloat(prevBalanceResult.rows[0]?.upi_lite_balance || 0);
+
     // Transfer from bank to UPI Lite
     const result = await client.query(
       `UPDATE users 
@@ -434,6 +442,28 @@ router.post('/wallet/transfer-to-upi-lite', paymentLimiter, async (req, res) => 
     );
 
     await client.query('COMMIT');
+
+    // HOOK: Trigger ETH purchase workflow when UPI Lite balance increases
+    const newUpiLiteBalance = parseFloat(result.rows[0].upi_lite_balance);
+    try {
+      const ethPurchaseResult = await openservAgent.processUpiLiteBalanceChange(
+        req.user.userId,
+        previousUpiLiteBalance,
+        newUpiLiteBalance
+      );
+      if (ethPurchaseResult) {
+        logTransaction('ETH_AUTO_PURCHASE', {
+          userId: req.user.userId,
+          upiLiteChange: amount,
+          ethPurchased: ethPurchaseResult.ethPurchased,
+          txHash: ethPurchaseResult.transactionHash
+        }, req);
+      }
+    } catch (ethError) {
+      // Log but don't fail the transfer if ETH purchase fails
+      console.error('ETH auto-purchase failed:', ethError);
+      logError(ethError, req);
+    }
 
     logTransaction('TRANSFER_TO_UPI_LITE', {
       userId: req.user.userId,

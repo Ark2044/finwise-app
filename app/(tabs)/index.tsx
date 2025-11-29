@@ -62,11 +62,13 @@ export default function HomeScreen() {
   };
 
   const handleSendMoney = () => {
-    Alert.alert('Send Money', 'Enter UPI ID or select contact');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push('/send-money');
   };
 
   const handleRequestMoney = () => {
-    Alert.alert('Request Money', 'Feature coming soon');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push('/request-money');
   };
 
   const handleCheckBalance = () => {
